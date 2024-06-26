@@ -16,13 +16,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/test")
-public class SampleController {
+public class TestController {
 
     private final UserService userService;
 
@@ -31,35 +33,34 @@ public class SampleController {
     private final Utils utils;
 
     private List<String> msgList;
-    @PostMapping("/")
+    @PostMapping("/user")
     public Mono<UserResponse> createUser(@RequestBody UserCreateRequest request) throws Exception{
         return userService.create(request.getName(), request.getEmail())
                 .map(UserResponse::of);
     }
 
-    @GetMapping("/")
+    @GetMapping("/users")
     public Flux<UserResponse> findAllUsers() throws Exception {
         var te = 1;
         return userService.findAll()
                 .map(UserResponse::of);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/user/{id}")
     public Mono<ResponseEntity<UserResponse>> findUser(@PathVariable Long id) {
         return userService.findById(id)
                 .map(u -> ResponseEntity.ok(UserResponse.of(u)))
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/user/{id}")
     public Mono<ResponseEntity<?>> deleteUser(@PathVariable Long id) {
-        return userService.deleteById(id).then(Mono.just(ResponseEntity.noContent().build()));
+        return userService.deleteById(id)
+                .then(Mono.just(ResponseEntity.noContent().build()));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/user/{id}")
     public Mono<ResponseEntity<UserResponse>> updateUser(@PathVariable Long id, @RequestBody UserUpdateRequest request) {
-        // user (x): 404 not found
-        // user (o): 200 ok
         return userService.update(id, request.getName(), request.getEmail())
                 .map(u -> ResponseEntity.ok(UserResponse.of(u)))
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
@@ -70,9 +71,43 @@ public class SampleController {
         return mvcTestService.testMvcToWebClient(msg);
     }
 
+    /**
+     * webClient 테스트
+     * 일괄 flux 호출 후 mvc 스레드 동작 테스트
+     * @return
+     */
+    @PutMapping("/mvcMany")
+    public Flux<Map> testWebClientMany(){
+        List<Mono<Map>> monoList = new ArrayList<>();
 
+        for(var i=0; i<100; i++){
+            monoList.add(mvcTestService.testMvcToWebClient(Integer.toString(i) + " : 요청"));
+        }
+
+        return Flux.concat(monoList);
+    }
+
+    /**
+     * webClient 테스트
+     * 순차 subscribe 호출 후 mvc 스레드 동작 테스트
+     * @return
+     */
+    @PutMapping("/mvcMany2")
+    public Flux<Object> testWebClientMany2() throws Exception{
+        List list = new ArrayList<>();
+
+        for(var i=0; i<100; i++){
+            list.add(mvcTestService.testMvcToWebClient(Integer.toString(i)).subscribe());
+        }
+        return Flux.just(new HashMap().put("msg", "성공"));
+    }
+
+    /**
+     * sse 접속 테스트
+     * @return
+     */
     @GetMapping("/testSSE")
-    public Flux<ServerSentEvent<String>> testSSE() {
+    public Flux<ServerSentEvent<String>> connectSSE1() {
 
         Mono<String> firstResponse = Mono.just("첫번째 응답입니다😆");
         Mono<String> secondResponse = Mono.just("두번째 응답입니다😎");
@@ -85,18 +120,34 @@ public class SampleController {
         return responseStream;
     }
 
+    /**
+     * sse 접속
+     * @param id
+     * @return
+     */
     @GetMapping(value = "/testSSE2/{id}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> testSSE2(@PathVariable String id) {
+    public Flux<ServerSentEvent<String>> connectSSE2(@PathVariable String id) {
 
         return utils.connect(id);
     }
 
+    /**
+     * sse 메시지 전달
+     * @param id
+     * @param msg
+     * @return
+     */
     @GetMapping(value = "/testSSE2/send/{id}/{msg}")
     public Mono<ResponseEntity<Boolean>> sseSuccessConnection(@PathVariable  String id, @PathVariable  String msg) {
         return utils.successMessageSend(id, msg)
                 .map(isSuccess -> new ResponseEntity<>(isSuccess, HttpStatus.OK));
     }
 
+    /**
+     * sse 메시지 전달
+     * @param msg
+     * @return
+     */
     @GetMapping(value = "/testSSE2/all/{msg}")
     @ResponseBody
     public Flux<Boolean> testSSE3NoParam(@PathVariable  String msg) {

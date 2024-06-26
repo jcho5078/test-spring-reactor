@@ -18,8 +18,13 @@ public class ReactorSpringMvcApplication {
 
     @GetMapping("/mvc/{msg}")
     public Map<String, String> testWithWebflux(@PathVariable String msg) throws Exception {
-        Thread.sleep(300);
-        return Map.of("id", msg.toString(), "content", "Get WebFlux content is %s".formatted(msg));
+        Thread currentThread = Thread.currentThread();
+
+        System.out.println("thread-id : " + currentThread.getName());
+
+        return Map.of("thread-id", currentThread.getName()
+                , "msg", msg.toString()
+                , "content", "Get WebFlux content is %s".formatted(msg));
     }
 
 }

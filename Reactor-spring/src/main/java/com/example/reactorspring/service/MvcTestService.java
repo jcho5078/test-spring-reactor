@@ -1,6 +1,7 @@
 package com.example.reactorspring.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -17,13 +18,14 @@ public class MvcTestService {
     private final String mvcUrl = "http://127.0.0.1:8090";
 
     public Mono<Map> testMvcToWebClient(String msg) {
-        String uriString = UriComponentsBuilder.fromHttpUrl(mvcUrl)
+         String uriString = UriComponentsBuilder.fromHttpUrl(mvcUrl)
                 .path("/mvc/%s".formatted(msg))
                 .buildAndExpand()
                 .toUriString();
 
         return webClient.get()
                 .uri(uriString)
+                .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(Map.class)
                 .onErrorResume(error -> Mono.just(new HashMap<String, String>()));

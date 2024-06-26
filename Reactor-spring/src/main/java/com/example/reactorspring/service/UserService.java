@@ -24,7 +24,7 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public Mono<Integer> deleteById(Long id) {
+    public Mono<Void> deleteById(Long id) {
         return userRepository.deleteById(id);
     }
 
