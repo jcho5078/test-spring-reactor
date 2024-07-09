@@ -1,0 +1,17 @@
+logging:
+  level:
+    root: DEBUG
+
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      repositories:
+        enabled: false
+  r2dbc:
+    url: r2dbc:mysql://localhost:3306/test?characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: root
+    password: 1234
+
