@@ -1,6 +1,6 @@
-create table t_user
+create table if not EXISTS t_user
 (
-    ID INT UNSIGNED null,
+    ID BIGINT UNSIGNED AUTO_INCREMENT,
     NAME VARCHAR(20) not null,
     EMAIL VARCHAR(30) not null,
     CREATED_AT DATE null,
@@ -8,4 +8,3 @@ create table t_user
     constraint T_USER_pk
         primary key (ID)
 );
-
