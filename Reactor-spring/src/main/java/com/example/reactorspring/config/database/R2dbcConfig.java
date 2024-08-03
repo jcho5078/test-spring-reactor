@@ -1,4 +1,4 @@
-package com.example.reactorspring.config;
+package com.example.reactorspring.config.database;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -22,10 +22,8 @@ import java.util.Map;
 public class TestController {
 
     private final UserService userService;
-
     private final MvcTestService mvcTestService;
 
-    private List<String> msgList;
     @PostMapping("/user")
     public Mono<UserResponse> createUser(@RequestBody UserCreateRequest request) throws Exception{
         return userService.create(request.getName(), request.getEmail())

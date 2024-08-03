@@ -1,4 +1,4 @@
-package com.example.reactorspring.config;
+package com.example.reactorspring.config.web;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
