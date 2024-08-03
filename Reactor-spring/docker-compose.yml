@@ -1,0 +1,79 @@
+version: "v1"
+services:
+  db:
+    image: mariadb:10
+    container_name: mariadb
+    ports:
+      - 3306:3306
+    environment:
+      TZ: Asia/Seoul
+      MYSQL_HOST: localhost
+      MYSQL_PORT: 3306
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: test
+      MYSQL_USER: user
+      MYSQL_PASSWORD: 1234
+  redis:
+    image: redis:6.2
+    #command: redis-server --port 6379
+    container_name: redis
+    hostname: redis
+    ports:
+      - 6379:6379
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      #- REDIS_PASSWORD=0000
+    networks:
+      - monitor
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    user: root
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    networks:
+      - monitor
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=0000
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+    networks:
+      - monitor
+    #volumes:
+    #  - /volume/grafana/data:/var/lib/grafana
+    #  - /volume/grafana/provisioning:/etc/grafana/provisioning
+
+  redis-exporter:
+    container_name: redis-exporter
+    image: oliver006/redis_exporter:latest
+    #environment:
+      #REDIS_ADDR: redis://redis:6379
+    environment:
+      #REDIS_ADDR: "redis:6379"
+      REDIS_ADDR: "redis:6379"
+      #REDIS_USER: null
+      #REDIS_PASSWORD: 0000
+    ports:
+      - 9121:9121
+    depends_on:
+      - prometheus
+    networks:
+      - monitor
+    restart: always
+
+
+networks:
+  monitor:
+    driver: bridge
